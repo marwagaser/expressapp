@@ -9,30 +9,6 @@ var usersRouter = require("./routes/users");
 var cors = require("cors");
 var app = express();
 
-//add mongoose
-var mongoose = require("mongoose");
-mongoose.connect("mongodb://localhost:27017/ricker", {
-  useNewUrlParser: true
-});
-//passport
-var passport = require("passport");
-//session
-var session = require("express-session");
-app.use(
-  session({
-    name: "myname.sid",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 36000000,
-      httpOnly: false,
-      secure: false
-    }
-  })
-);
-
-app.use(passport.session());
-app.use(passport.initialize());
 //add cors
 app.use(
   cors({
@@ -40,10 +16,38 @@ app.use(
     credentials: true
   })
 );
+//add mongoose
+var mongoose = require("mongoose");
+mongoose.connect("mongodb://localhost/ricker", {
+  useNewUrlParser: true
+});
+//passport
+var passport = require("passport");
+//session
+
+var session = require("express-session");
+const MongoStore = require("connect-mongo")(session);
+app.use(
+  session({
+    name: "myname.sid",
+    resave: false,
+    saveUninitialized: false,
+    secret: "secret",
+    cookie: {
+      maxAge: 36000000,
+      httpOnly: false,
+      secure: false
+    },
+    store: new MongoStore({ mongooseConnection: mongoose.connection })
+  })
+);
+require("./passport-config");
+app.use(passport.initialize());
+app.use(passport.session());
+
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "hbs");
-o;
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
